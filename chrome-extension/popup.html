@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>JS Miner</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <h1>JS Miner</h1>
+    <p class="subtitle">Chrome extension port of the Burp Suite add-on.</p>
+  </header>
+  <section class="controls">
+    <button data-scan="auto">Run JS Auto-Mine</button>
+    <button data-scan="passive">Run all passive scans</button>
+    <details>
+      <summary>Individual scans</summary>
+      <div class="scan-grid">
+        <button data-scan="secrets">Secrets</button>
+        <button data-scan="dependency">Dependency Confusion</button>
+        <button data-scan="subdomains">Subdomains</button>
+        <button data-scan="cloud">Cloud URLs</button>
+        <button data-scan="inlineMaps">Inline B64 JS Source Maps</button>
+        <button data-scan="activeMaps">JS Source Mapper (active)</button>
+        <button data-scan="staticDump">Dump Static Files</button>
+        <button data-scan="endpoints">API Endpoints Finder</button>
+      </div>
+    </details>
+  </section>
+  <section id="status" class="status"></section>
+  <section id="results" class="results"></section>
+  <script src="vendor/jszip.min.js"></script>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
