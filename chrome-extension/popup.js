@@ -12,6 +12,11 @@ const statusEl = document.getElementById('status');
 const resultsEl = document.getElementById('results');
 const controls = document.querySelectorAll('button[data-scan]');
 
+const EXTENSION_ORIGIN = new URL(chrome.runtime.getURL('')).origin;
+let consoleWindow = null;
+let consoleReady = false;
+const consoleQueue = [];
+
 const SCANNERS = {
   secrets: runSecretsScan,
   dependency: runDependencyConfusionScan,
@@ -92,16 +97,80 @@ function flattenIssues(results) {
   return results.flatMap((result) => result.issues.map((issue) => ({ ...issue, scanner: result.scanner })));
 }
 
-function renderIssues(issues) {
-  resultsEl.innerHTML = '';
-  if (!issues.length) {
-    const empty = document.createElement('div');
-    empty.className = 'empty-state';
-    empty.textContent = 'No findings were reported.';
-    resultsEl.appendChild(empty);
+function mapIssuesForConsole(issues) {
+  return issues.map((issue) => ({
+    title: issue.title,
+    severity: issue.severity,
+    confidence: issue.confidence,
+    resourceUrl: issue.resourceUrl,
+    matches: issue.matches || [],
+    hasDownload: Boolean(issue.download)
+  }));
+}
+
+function ensureConsoleWindow() {
+  if (consoleWindow && !consoleWindow.closed) {
+    return consoleWindow;
+  }
+  consoleWindow = window.open(
+    chrome.runtime.getURL('console.html'),
+    'jsMinerConsole',
+    'width=720,height=520,resizable=yes,scrollbars=yes'
+  );
+  consoleReady = false;
+  return consoleWindow;
+}
+
+function flushConsoleQueue() {
+  if (!consoleReady || !consoleWindow || consoleWindow.closed) return;
+  while (consoleQueue.length > 0) {
+    const message = consoleQueue.shift();
+    consoleWindow.postMessage(message, EXTENSION_ORIGIN);
+  }
+}
+
+function sendConsoleMessage(type, payload) {
+  const targetWindow = ensureConsoleWindow();
+  if (!targetWindow) {
+    statusEl.textContent = 'Unable to open JS Miner Console window. Please allow pop-ups for extensions.';
     return;
   }
-  issues.forEach((issue, index) => {
+  const message = { source: 'js-miner-popup', type, payload };
+  if (consoleReady && targetWindow && !targetWindow.closed) {
+    targetWindow.postMessage(message, EXTENSION_ORIGIN);
+  } else {
+    consoleQueue.push(message);
+  }
+}
+
+window.addEventListener('message', (event) => {
+  if (event.origin !== EXTENSION_ORIGIN) return;
+  if (event.data?.source !== 'js-miner-console') return;
+  if (event.data.type === 'console-ready') {
+    consoleReady = true;
+    flushConsoleQueue();
+  } else if (event.data.type === 'console-closed') {
+    consoleWindow = null;
+    consoleReady = false;
+    consoleQueue.length = 0;
+  }
+});
+
+function renderIssues(issues) {
+  resultsEl.innerHTML = '';
+
+  const summary = document.createElement('div');
+  summary.className = 'console-summary';
+  summary.textContent = issues.length
+    ? `${issues.length} finding(s) detected. Detailed logs are available in the JS Miner Console window below.`
+    : 'No findings were reported. Review the JS Miner Console window for full logs.';
+  resultsEl.appendChild(summary);
+
+  if (!issues.length) {
+    return;
+  }
+
+  issues.forEach((issue) => {
     const card = document.createElement('article');
     card.className = 'result-card';
 
@@ -149,24 +218,52 @@ function renderIssues(issues) {
 async function runScans(scanKeys) {
   statusEl.textContent = 'Collecting resources...';
   controls.forEach((btn) => (btn.disabled = true));
-  const tab = await getActiveTab();
-  const context = await prepareContext(tab.id);
-  statusEl.textContent = 'Running scans...';
+  sendConsoleMessage('status', 'Collecting resources from the active tab...');
 
-  const results = [];
-  for (const key of scanKeys) {
-    const scanner = SCANNERS[key];
-    if (!scanner) continue;
-    // Some scanners are async
-    // eslint-disable-next-line no-await-in-loop
-    const outcome = await scanner(context);
-    results.push(outcome);
+  try {
+    const tab = await getActiveTab();
+    sendConsoleMessage('status', `Active tab: ${tab?.url || tab?.title || 'Unknown'}`);
+
+    const context = await prepareContext(tab.id);
+    sendConsoleMessage(
+      'status',
+      `Collected ${context.resources.length} resource(s) from ${context.pageUrl}`
+    );
+
+    statusEl.textContent = 'Running scans...';
+    sendConsoleMessage('status', `Running ${scanKeys.length} scan(s)...`);
+
+    const results = [];
+    for (const key of scanKeys) {
+      const scanner = SCANNERS[key];
+      if (!scanner) continue;
+      sendConsoleMessage('scan-start', { scanner: key });
+      // Some scanners are async
+      // eslint-disable-next-line no-await-in-loop
+      const outcome = await scanner(context);
+      results.push(outcome);
+      sendConsoleMessage('scan-results', {
+        scanner: key,
+        issues: mapIssuesForConsole(outcome.issues || [])
+      });
+    }
+
+    const issues = flattenIssues(results);
+    renderIssues(issues);
+    statusEl.textContent = `Completed ${scanKeys.length} scan(s).`;
+    sendConsoleMessage('summary', {
+      scanCount: scanKeys.length,
+      issueCount: issues.length,
+      pageUrl: context.pageUrl
+    });
+  } catch (error) {
+    console.error(error);
+    const message = error instanceof Error ? error.message : String(error);
+    statusEl.textContent = 'An error occurred. See JS Miner Console for details.';
+    sendConsoleMessage('error', message);
+  } finally {
+    controls.forEach((btn) => (btn.disabled = false));
   }
-
-  const issues = flattenIssues(results);
-  renderIssues(issues);
-  statusEl.textContent = `Completed ${scanKeys.length} scan(s).`;
-  controls.forEach((btn) => (btn.disabled = false));
 }
 
 controls.forEach((button) => {
