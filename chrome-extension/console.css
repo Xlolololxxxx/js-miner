@@ -1,0 +1,75 @@
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #060708;
+  color: #e6edf3;
+  font-family: 'Fira Code', 'Source Code Pro', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.4;
+  min-height: 100vh;
+  display: flex;
+}
+
+#terminal {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  background: radial-gradient(circle at top left, rgba(48, 106, 255, 0.12), rgba(0, 0, 0, 0.85) 65%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.line {
+  margin-bottom: 6px;
+  padding-left: 12px;
+  position: relative;
+}
+
+.line::before {
+  content: '➜';
+  position: absolute;
+  left: 0;
+  color: #4ea1ff;
+}
+
+.line.status {
+  color: #8ab4ff;
+}
+
+.line.success {
+  color: #7ee787;
+}
+
+.line.warn {
+  color: #facc15;
+}
+
+.line.error {
+  color: #ff6b6b;
+}
+
+.line.issue-title {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.line.meta {
+  color: #9ca8b7;
+  font-style: italic;
+}
+
+.line.match {
+  color: #d1d9e0;
+}
+
+.line + .line.match {
+  margin-top: -2px;
+}
+
+.line:last-child {
+  margin-bottom: 0;
+}
