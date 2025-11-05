@@ -1,0 +1,328 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg-primary: #1e1e1e;
+  --bg-secondary: #252526;
+  --bg-tertiary: #2d2d30;
+  --border-color: #3e3e42;
+  --text-primary: #cccccc;
+  --text-secondary: #969696;
+  --accent-blue: #007acc;
+  --accent-green: #4ec9b0;
+  --accent-yellow: #dcdcaa;
+  --accent-red: #f48771;
+  --accent-orange: #ce9178;
+  --terminal-bg: #1e1e1e;
+  --terminal-text: #d4d4d4;
+  --success: #89d185;
+  --warning: #e5c07b;
+  --error: #f48771;
+  --info: #61afef;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  font-size: 13px;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  height: 100vh;
+  overflow: hidden;
+}
+
+.panel-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* Controls Section (Top) */
+.controls-section {
+  flex: 0 0 auto;
+  border-bottom: 2px solid var(--border-color);
+  overflow-y: auto;
+  max-height: 60vh;
+}
+
+.header {
+  padding: 16px 20px 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.header h1 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--accent-blue);
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Settings Panel */
+.settings-panel {
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+}
+
+.settings-header {
+  padding: 12px 20px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  background-color: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.settings-header:hover {
+  background-color: #3a3a3c;
+}
+
+.settings-content {
+  padding: 16px 20px;
+}
+
+.setting-group {
+  margin-bottom: 16px;
+}
+
+.setting-group:last-child {
+  margin-bottom: 0;
+}
+
+.setting-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.setting-group select {
+  width: 100%;
+  padding: 8px 12px;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.setting-group select:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+}
+
+.settings-status {
+  margin-left: 12px;
+  font-size: 12px;
+  color: var(--success);
+}
+
+/* Scan Controls */
+.scan-controls {
+  padding: 16px 20px;
+}
+
+.scan-controls h2 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+button {
+  padding: 8px 16px;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+button:hover:not(:disabled) {
+  background-color: #3a3a3c;
+  border-color: var(--accent-blue);
+}
+
+button:active:not(:disabled) {
+  background-color: #2d2d30;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background-color: var(--accent-blue);
+  color: white;
+  font-weight: 500;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #005a9e;
+  border-color: var(--accent-blue);
+}
+
+.btn-secondary {
+  background-color: var(--accent-green);
+  color: var(--bg-primary);
+  font-weight: 500;
+  border: none;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #3da890;
+}
+
+.individual-scans {
+  margin-top: 12px;
+}
+
+.individual-scans summary {
+  padding: 8px 12px;
+  cursor: pointer;
+  user-select: none;
+  background-color: var(--bg-secondary);
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.individual-scans summary:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.individual-scans .button-grid {
+  margin-top: 12px;
+}
+
+/* Status Bar */
+.status-bar {
+  padding: 10px 20px;
+  background-color: var(--bg-tertiary);
+  border-top: 1px solid var(--border-color);
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
+/* Terminal Section (Bottom) */
+.terminal-section {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+  background-color: var(--terminal-bg);
+}
+
+.terminal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.btn-clear {
+  padding: 4px 12px;
+  font-size: 11px;
+  background-color: var(--bg-secondary);
+}
+
+.terminal-output {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  background-color: var(--terminal-bg);
+  color: var(--terminal-text);
+}
+
+.terminal-line {
+  padding: 2px 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.terminal-line.status {
+  color: var(--info);
+}
+
+.terminal-line.success {
+  color: var(--success);
+}
+
+.terminal-line.warn {
+  color: var(--warning);
+}
+
+.terminal-line.error {
+  color: var(--error);
+}
+
+.terminal-line.issue-title {
+  color: var(--accent-yellow);
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.terminal-line.meta {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.terminal-line.match {
+  color: var(--accent-green);
+  padding-left: 16px;
+}
+
+.terminal-line.debug {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4e4e50;
+}
+
+/* Responsive adjustments */
+@media (max-height: 600px) {
+  .controls-section {
+    max-height: 50vh;
+  }
+}

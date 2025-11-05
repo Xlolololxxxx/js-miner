@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>JS Miner Panel</title>
+  <link rel="stylesheet" href="panel.css">
+</head>
+<body>
+  <div class="panel-container">
+    <!-- Top Section: Controls and Settings -->
+    <div class="controls-section">
+      <header class="header">
+        <h1>JS Miner</h1>
+        <p class="subtitle">JavaScript Security Scanner</p>
+      </header>
+
+      <!-- Settings Section -->
+      <details class="settings-panel" open>
+        <summary class="settings-header">Settings</summary>
+        <div class="settings-content">
+          <div class="setting-group">
+            <label for="verbosity">Verbosity Level:</label>
+            <select id="verbosity" name="verbosity">
+              <option value="minimal">Minimal (Errors only)</option>
+              <option value="normal" selected>Normal (Standard output)</option>
+              <option value="verbose">Verbose (Detailed info)</option>
+              <option value="debug">Debug (All details)</option>
+            </select>
+          </div>
+
+          <div class="setting-group">
+            <label for="aggressiveness">Scan Aggressiveness:</label>
+            <select id="aggressiveness" name="aggressiveness">
+              <option value="passive" selected>Passive (Safe, non-invasive)</option>
+              <option value="moderate">Moderate (Includes active scans)</option>
+              <option value="aggressive">Aggressive (All scanners)</option>
+            </select>
+          </div>
+
+          <div class="setting-group">
+            <button id="save-settings" class="btn-secondary">Save Settings</button>
+            <span id="settings-status" class="settings-status"></span>
+          </div>
+        </div>
+      </details>
+
+      <!-- Scan Controls -->
+      <section class="scan-controls">
+        <h2>Quick Actions</h2>
+        <div class="button-grid">
+          <button id="scan-auto" class="btn-primary" data-scan="auto">Run Auto-Mine</button>
+          <button id="scan-passive" class="btn-primary" data-scan="passive">Run Passive Scans</button>
+        </div>
+
+        <details class="individual-scans">
+          <summary>Individual Scanners</summary>
+          <div class="button-grid">
+            <button data-scan="secrets">Secrets</button>
+            <button data-scan="dependency">Dependency Confusion</button>
+            <button data-scan="subdomains">Subdomains</button>
+            <button data-scan="cloud">Cloud URLs</button>
+            <button data-scan="inlineMaps">Inline Source Maps</button>
+            <button data-scan="activeMaps">Source Mapper (Active)</button>
+            <button data-scan="staticDump">Static Files Dump</button>
+            <button data-scan="endpoints">API Endpoints</button>
+          </div>
+        </details>
+      </section>
+
+      <!-- Status Bar -->
+      <div id="status-bar" class="status-bar">Ready</div>
+    </div>
+
+    <!-- Bottom Section: Terminal Output -->
+    <div class="terminal-section">
+      <div class="terminal-header">
+        <span>Terminal Output</span>
+        <button id="clear-terminal" class="btn-clear">Clear</button>
+      </div>
+      <div id="terminal" class="terminal-output" role="log" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <script src="vendor/jszip.min.js"></script>
+  <script type="module" src="panel.js"></script>
+</body>
+</html>
