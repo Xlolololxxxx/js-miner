@@ -9,10 +9,44 @@ import { appendFoundMatch, isHighEntropy, isValidBase64 } from '../utilities.js'
 
 const FALSE_POSITIVES = ['basic', 'bearer', 'token'];
 
+// Analytics/tracking services that commonly appear as config keys (not real secrets)
+const ANALYTICS_SERVICES = [
+  'graphite',
+  'amplitude',
+  'firebase',
+  'raygun',
+  'mixpanel',
+  'segment',
+  'heap',
+  'intercom',
+  'hotjar',
+  'fullstory',
+  'logrocket',
+  'sentry',
+  'bugsnag',
+  'rollbar',
+  'appsflyer',
+  'branch',
+  'adjust',
+  'kochava',
+  'tune'
+];
+
 function isNotFalsePositive(secret) {
   const cleaned = secret.replace(/\s|\*/g, '');
   if (cleaned.length <= 4) return false;
   return !FALSE_POSITIVES.includes(cleaned.toLowerCase());
+}
+
+function isNotAnalyticsService(fullMatch) {
+  const lowerMatch = fullMatch.toLowerCase();
+  // Check if the match contains any analytics service name
+  for (const service of ANALYTICS_SERVICES) {
+    if (lowerMatch.includes(service)) {
+      return false; // Filter out this match
+    }
+  }
+  return true; // Keep this match
 }
 
 export function runSecretsScan({ resources }) {
@@ -26,21 +60,30 @@ export function runSecretsScan({ resources }) {
 
     for (const match of content.matchAll(SECRETS_REGEX)) {
       const secret = match.groups?.secret || '';
+      const fullMatch = match[0];
+
       if (!secret) continue;
+
+      // Filter out analytics service keys
+      if (!isNotAnalyticsService(fullMatch)) continue;
+
       if (isHighEntropy(secret)) {
-        appendFoundMatch(highMatchesSet, highMatchesList, match[0]);
+        appendFoundMatch(highMatchesSet, highMatchesList, fullMatch);
       } else if (isNotFalsePositive(secret)) {
-        appendFoundMatch(lowMatchesSet, lowMatchesList, match[0]);
+        appendFoundMatch(lowMatchesSet, lowMatchesList, fullMatch);
       }
     }
 
     const basicMatch = content.match(HTTP_BASIC_AUTH_SECRETS);
     if (basicMatch) {
-      const base64String = basicMatch[2];
-      if (isValidBase64(base64String) && isHighEntropy(atob(base64String))) {
-        appendFoundMatch(highMatchesSet, highMatchesList, basicMatch[0]);
-      } else {
-        appendFoundMatch(lowMatchesSet, lowMatchesList, basicMatch[0]);
+      // Filter out analytics service keys from basic auth matches too
+      if (isNotAnalyticsService(basicMatch[0])) {
+        const base64String = basicMatch[2];
+        if (isValidBase64(base64String) && isHighEntropy(atob(base64String))) {
+          appendFoundMatch(highMatchesSet, highMatchesList, basicMatch[0]);
+        } else {
+          appendFoundMatch(lowMatchesSet, lowMatchesList, basicMatch[0]);
+        }
       }
     }
 
