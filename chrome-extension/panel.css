@@ -124,6 +124,44 @@ body {
   color: var(--success);
 }
 
+/* Crawler Settings */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-right: 10px;
+  cursor: pointer;
+  accent-color: var(--accent-blue);
+}
+
+.checkbox-label span {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.setting-description {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0;
+  padding-left: 28px;
+  font-style: italic;
+}
+
+.crawler-settings {
+  border-left: 3px solid var(--accent-blue);
+  padding-left: 12px;
+  background-color: rgba(0, 122, 204, 0.05);
+  border-radius: 4px;
+  padding: 12px;
+}
+
 /* Scan Controls */
 .scan-controls {
   padding: 16px 20px;

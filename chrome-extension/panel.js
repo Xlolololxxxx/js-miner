@@ -7,6 +7,7 @@ import { runActiveSourceMapperScan } from './scripts/scanners/activeSourceMapper
 import { runStaticFilesDump } from './scripts/scanners/staticFilesDumper.js';
 import { runEndpointsScan } from './scripts/scanners/endpoints.js';
 import { createZipDownload, pathFromUrl, textToBytes } from './scripts/utilities.js';
+import { crawlForResources, deduplicateResources } from './scripts/crawler.js';
 
 // DOM Elements
 const terminalEl = document.getElementById('terminal');
@@ -16,6 +17,8 @@ const saveSettingsBtn = document.getElementById('save-settings');
 const settingsStatusEl = document.getElementById('settings-status');
 const verbositySelect = document.getElementById('verbosity');
 const aggressivenessSelect = document.getElementById('aggressiveness');
+const crawlerEnabledCheckbox = document.getElementById('crawler-enabled');
+const crawlerDepthSelect = document.getElementById('crawler-depth');
 const scanButtons = document.querySelectorAll('button[data-scan]');
 
 // Scanner definitions
@@ -38,7 +41,9 @@ const AGGRESSIVE_SCANNERS = [...MODERATE_SCANNERS, 'staticDump'];
 // Settings management
 let settings = {
   verbosity: 'normal',
-  aggressiveness: 'passive'
+  aggressiveness: 'passive',
+  crawlerEnabled: false,
+  crawlerDepth: 1
 };
 
 // Verbosity levels
@@ -67,6 +72,8 @@ async function loadSettings() {
       settings = { ...settings, ...stored.jsMinerSettings };
       verbositySelect.value = settings.verbosity;
       aggressivenessSelect.value = settings.aggressiveness;
+      if (crawlerEnabledCheckbox) crawlerEnabledCheckbox.checked = settings.crawlerEnabled || false;
+      if (crawlerDepthSelect) crawlerDepthSelect.value = settings.crawlerDepth || 1;
       log('Settings loaded successfully', 'debug');
     }
   } catch (error) {
@@ -78,6 +85,8 @@ async function loadSettings() {
 async function saveSettings() {
   settings.verbosity = verbositySelect.value;
   settings.aggressiveness = aggressivenessSelect.value;
+  settings.crawlerEnabled = crawlerEnabledCheckbox ? crawlerEnabledCheckbox.checked : false;
+  settings.crawlerDepth = crawlerDepthSelect ? parseInt(crawlerDepthSelect.value, 10) : 1;
 
   try {
     await chrome.storage.local.set({ jsMinerSettings: settings });
@@ -231,20 +240,59 @@ async function prepareContext() {
   log('Collecting resources from inspected page...', 'status', VERBOSITY.NORMAL);
   const metadata = await collectResources();
 
-  log(`Found ${metadata.resources.length} resource(s)`, 'status', VERBOSITY.VERBOSE);
+  log(`Found ${metadata.resources.length} initial resource(s)`, 'status', VERBOSITY.VERBOSE);
 
-  const resources = [];
+  // Fetch initial resources
+  const initialResources = [];
   for (const resource of metadata.resources) {
     const enriched = await fetchResourceContent(resource);
-    resources.push(enriched);
+    initialResources.push(enriched);
   }
 
-  log(`Successfully fetched ${resources.filter(r => r.content).length} resource(s)`, 'status', VERBOSITY.VERBOSE);
+  log(`Successfully fetched ${initialResources.filter(r => r.content).length} initial resource(s)`, 'status', VERBOSITY.VERBOSE);
+
+  let allResources = initialResources;
+
+  // CRITICAL: Run crawler BEFORE scanners if enabled
+  if (settings.crawlerEnabled) {
+    log('Crawler enabled - discovering additional resources...', 'status', VERBOSITY.NORMAL);
+
+    try {
+      const discoveredResources = await crawlForResources({
+        baseUrl: metadata.pageUrl,
+        initialResources: initialResources,
+        maxDepth: settings.crawlerDepth,
+        checkCommonPaths: true,
+        logCallback: (message, level) => {
+          // Map crawler log levels to our verbosity system
+          const verbosityMap = {
+            'status': VERBOSITY.VERBOSE,
+            'success': VERBOSITY.VERBOSE,
+            'debug': VERBOSITY.DEBUG,
+            'error': VERBOSITY.MINIMAL
+          };
+          log(`[Crawler] ${message}`, level || 'status', verbosityMap[level] || VERBOSITY.VERBOSE);
+        }
+      });
+
+      // Combine initial and discovered resources, then deduplicate
+      allResources = deduplicateResources([...initialResources, ...discoveredResources]);
+
+      const addedCount = allResources.length - initialResources.length;
+      log(`Crawler added ${addedCount} new resource(s) to the scan pool`, 'success', VERBOSITY.NORMAL);
+
+    } catch (error) {
+      log(`Crawler error: ${error.message}`, 'error', VERBOSITY.MINIMAL);
+      log('Continuing with initial resources only...', 'warn', VERBOSITY.NORMAL);
+    }
+  }
+
+  log(`Total resources ready for scanning: ${allResources.length}`, 'status', VERBOSITY.NORMAL);
 
   return {
     pageUrl: metadata.pageUrl,
     referrer: metadata.referrer,
-    resources
+    resources: allResources
   };
 }
 
@@ -362,6 +410,6 @@ scanButtons.forEach(button => {
 (async function init() {
   await loadSettings();
   log('JS Miner DevTools Panel initialized', 'success', VERBOSITY.NORMAL);
-  log(`Verbosity: ${settings.verbosity} | Aggressiveness: ${settings.aggressiveness}`, 'status', VERBOSITY.VERBOSE);
+  log(`Verbosity: ${settings.verbosity} | Aggressiveness: ${settings.aggressiveness} | Crawler: ${settings.crawlerEnabled ? 'enabled' : 'disabled'}`, 'status', VERBOSITY.VERBOSE);
   updateStatusBar('Ready');
 })();

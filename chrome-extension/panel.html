@@ -37,6 +37,23 @@
             </select>
           </div>
 
+          <div class="setting-group crawler-settings">
+            <label class="checkbox-label">
+              <input type="checkbox" id="crawler-enabled" name="crawler-enabled">
+              <span>Enable Crawler/Directory Enumeration</span>
+            </label>
+            <p class="setting-description">Discovers additional JS files before scanning by checking common paths and extracting endpoints from initial resources.</p>
+          </div>
+
+          <div class="setting-group">
+            <label for="crawler-depth">Crawler Max Depth:</label>
+            <select id="crawler-depth" name="crawler-depth">
+              <option value="1" selected>1 (Shallow - Recommended)</option>
+              <option value="2">2 (Moderate)</option>
+              <option value="3">3 (Deep - Slow)</option>
+            </select>
+          </div>
+
           <div class="setting-group">
             <button id="save-settings" class="btn-secondary">Save Settings</button>
             <span id="settings-status" class="settings-status"></span>
