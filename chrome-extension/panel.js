@@ -6,6 +6,7 @@ import { runInlineSourceMapScan } from './scripts/scanners/inlineSourceMaps.js';
 import { runActiveSourceMapperScan } from './scripts/scanners/activeSourceMapper.js';
 import { runStaticFilesDump } from './scripts/scanners/staticFilesDumper.js';
 import { runEndpointsScan } from './scripts/scanners/endpoints.js';
+import { runAbpConfigScan } from './scripts/scanners/abpConfig.js';
 import { createZipDownload, pathFromUrl, textToBytes } from './scripts/utilities.js';
 import { crawlForResources, deduplicateResources } from './scripts/crawler.js';
 
@@ -30,11 +31,12 @@ const SCANNERS = {
   inlineMaps: runInlineSourceMapScan,
   activeMaps: runActiveSourceMapperScan,
   staticDump: runStaticFilesDump,
-  endpoints: runEndpointsScan
+  endpoints: runEndpointsScan,
+  abpConfig: runAbpConfigScan
 };
 
 // Scanner groups by aggressiveness
-const PASSIVE_SCANNERS = ['secrets', 'dependency', 'subdomains', 'cloud', 'inlineMaps', 'endpoints'];
+const PASSIVE_SCANNERS = ['secrets', 'dependency', 'subdomains', 'cloud', 'inlineMaps', 'endpoints', 'abpConfig'];
 const MODERATE_SCANNERS = [...PASSIVE_SCANNERS, 'activeMaps'];
 const AGGRESSIVE_SCANNERS = [...MODERATE_SCANNERS, 'staticDump'];
 
